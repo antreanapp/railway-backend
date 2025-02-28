@@ -13,8 +13,8 @@ const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use("/api", otp_1.default);
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 (0, whatsapp_1.default)();
-app.listen(PORT, () => {
-    console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server berjalan di port ${PORT}`);
 });
