@@ -50,8 +50,8 @@ const boom_1 = require("@hapi/boom");
 const qrcode_terminal_1 = __importDefault(require("qrcode-terminal"));
 const firebase_1 = __importDefault(require("../config/firebase")); // 🔹 Menggunakan Firebase Admin SDK
 const db = firebase_1.default.database();
-const sessionRef = db.ref("whatsapp/session"); // 🔹 Lokasi penyimpanan sesi
-// 🔹 Flag untuk mencegah reconnect berulang
+const sessionRef = db.ref("whatsapp/session"); // 🔹 Lokasi penyimpanan sesi di Firebase
+// 🔹 Flag global untuk mencegah reconnect berulang
 let isReconnecting = false;
 // 🔹 Fungsi untuk memuat sesi dari Firebase
 function loadSession() {
@@ -60,7 +60,7 @@ function loadSession() {
             const snapshot = yield sessionRef.once("value");
             if (snapshot.exists()) {
                 console.log("✅ Sesi ditemukan di Firebase.");
-                return snapshot.exists() ? JSON.parse(snapshot.val(), baileys_1.BufferJSON.reviver) : null;
+                return JSON.parse(snapshot.val(), baileys_1.BufferJSON.reviver);
             }
             else {
                 console.log("⚠️ Tidak ada sesi yang tersimpan. Harap scan ulang.");
@@ -90,7 +90,7 @@ function connectToWhatsApp() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("🔄 Memulai koneksi WhatsApp...");
         const sessionData = yield loadSession();
-        const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)("./session");
+        const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)("./baileys_auth_info"); // Masih perlu untuk state auth
         // 🔹 Jika sesi ada, gunakan sesi yang tersimpan
         if (sessionData) {
             Object.assign(state.creds, sessionData);

@@ -4,9 +4,9 @@ import qrcode from "qrcode-terminal";
 import admin from "../config/firebase"; // 🔹 Menggunakan Firebase Admin SDK
 
 const db = admin.database();
-const sessionRef = db.ref("whatsapp/session"); // 🔹 Lokasi penyimpanan sesi
+const sessionRef = db.ref("whatsapp/session"); // 🔹 Lokasi penyimpanan sesi di Firebase
 
-// 🔹 Flag untuk mencegah reconnect berulang
+// 🔹 Flag global untuk mencegah reconnect berulang
 let isReconnecting = false;
 
 // 🔹 Fungsi untuk memuat sesi dari Firebase
@@ -15,7 +15,7 @@ async function loadSession() {
     const snapshot = await sessionRef.once("value");
     if (snapshot.exists()) {
       console.log("✅ Sesi ditemukan di Firebase.");
-      return snapshot.exists() ? JSON.parse(snapshot.val(), BufferJSON.reviver) : null;
+      return JSON.parse(snapshot.val(), BufferJSON.reviver);
     } else {
       console.log("⚠️ Tidak ada sesi yang tersimpan. Harap scan ulang.");
       return null;
@@ -41,7 +41,7 @@ async function connectToWhatsApp(): Promise<any> {
   console.log("🔄 Memulai koneksi WhatsApp...");
 
   const sessionData = await loadSession();
-  const { state, saveCreds } = await useMultiFileAuthState("./session");
+  const { state, saveCreds } = await useMultiFileAuthState("./baileys_auth_info"); // Masih perlu untuk state auth
 
   // 🔹 Jika sesi ada, gunakan sesi yang tersimpan
   if (sessionData) {

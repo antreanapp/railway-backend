@@ -12,8 +12,8 @@ app.use(express.json());
 
 app.use("/api", otpRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 connectToWhatsApp();
-app.listen(PORT, () => {
-  console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server berjalan di port ${PORT}`);
 });
