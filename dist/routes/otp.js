@@ -112,6 +112,8 @@ const verifyOtpHandler = (req, res) => __awaiter(void 0, void 0, void 0, functio
     var _a;
     try {
         const { phoneNumber, otp } = req.body;
+        console.log("Nomor Telepon:", phoneNumber);
+        console.log("OTP:", otp);
         if (!phoneNumber || !otp) {
             res.status(400).json({ error: "Nomor telepon dan OTP harus diisi." });
             return;

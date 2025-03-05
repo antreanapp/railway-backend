@@ -108,6 +108,8 @@ const sendOtpHandler = async (req: Request, res: Response): Promise<void> => {
 const verifyOtpHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     const { phoneNumber, otp } = req.body;
+    console.log("Nomor Telepon:", phoneNumber);
+    console.log("OTP:", otp);
     if (!phoneNumber || !otp) {
       res.status(400).json({ error: "Nomor telepon dan OTP harus diisi." });
       return;
