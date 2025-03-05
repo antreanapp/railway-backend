@@ -159,7 +159,7 @@ function connectToWhatsAppWithRetry() {
         catch (error) {
             if (retryCount > 0) {
                 console.error(`❌ Gagal terhubung, mencoba kembali. Sisa percobaan: ${retryCount}`, error);
-                yield new Promise((resolve) => setTimeout(resolve, 5000));
+                yield new Promise((resolve) => setTimeout(resolve, 10000)); // Delay 10 detik sebelum reconnect
                 return connectToWhatsAppWithRetry(retryCount - 1);
             }
             throw new Error("❌ Gagal terhubung ke WhatsApp setelah beberapa percobaan.");
