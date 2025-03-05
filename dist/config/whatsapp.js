@@ -120,6 +120,7 @@ function connectToWhatsApp() {
                         try {
                             yield sock.logout();
                             yield sessionRef.remove(); // Hapus sesi di Firebase agar scan ulang
+                            console.log("✅ Sesi berhasil dihapus dari Firebase.");
                         }
                         catch (err) {
                             console.error("❌ Error saat logout:", err);
@@ -132,6 +133,7 @@ function connectToWhatsApp() {
                     isReconnecting = true;
                     setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                         try {
+                            console.log("🔄 Mencoba koneksi ulang...");
                             yield connectToWhatsAppWithRetry();
                         }
                         catch (e) {

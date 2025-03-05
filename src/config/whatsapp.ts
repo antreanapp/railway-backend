@@ -76,18 +76,20 @@ async function connectToWhatsApp(): Promise<any> {
           try {
             await sock.logout();
             await sessionRef.remove(); // Hapus sesi di Firebase agar scan ulang
+            console.log("✅ Sesi berhasil dihapus dari Firebase.");
           } catch (err) {
             console.error("❌ Error saat logout:", err);
           }
         }
         shouldReconnect = lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut;
       }
-
+    
       console.log("⚠️ Koneksi terputus, mencoba kembali...", shouldReconnect);
       if (shouldReconnect && !isReconnecting) {
         isReconnecting = true;
         setTimeout(async () => {
           try {
+            console.log("🔄 Mencoba koneksi ulang...");
             await connectToWhatsAppWithRetry();
           } catch (e) {
             console.error("❌ Reconnect gagal:", e);
