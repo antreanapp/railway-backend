@@ -1,15 +1,15 @@
 import makeWASocket, { useMultiFileAuthState, BufferJSON, DisconnectReason } from "@whiskeysockets/baileys";
 import { Boom } from "@hapi/boom";
 import qrcode from "qrcode-terminal";
-import admin from "../config/firebase"; // 🔹 Menggunakan Firebase Admin SDK
+import admin from "../config/firebase"; // Menggunakan Firebase Admin SDK
 
 const db = admin.database();
-const sessionRef = db.ref("whatsapp/session"); // 🔹 Lokasi penyimpanan sesi di Firebase
+const sessionRef = db.ref("whatsapp/session"); // Lokasi penyimpanan sesi
 
-// 🔹 Flag global untuk mencegah reconnect berulang
+// Flag untuk mencegah reconnect berulang
 let isReconnecting = false;
 
-// 🔹 Fungsi untuk memuat sesi dari Firebase
+// Fungsi untuk memuat sesi dari Firebase
 async function loadSession() {
   try {
     const snapshot = await sessionRef.once("value");
@@ -26,7 +26,7 @@ async function loadSession() {
   }
 }
 
-// 🔹 Fungsi untuk menyimpan sesi ke Firebase
+// Fungsi untuk menyimpan sesi ke Firebase
 async function saveSession(session: any) {
   try {
     await sessionRef.set(JSON.stringify(session, BufferJSON.replacer));
@@ -36,24 +36,25 @@ async function saveSession(session: any) {
   }
 }
 
-// 🔹 Fungsi utama untuk koneksi WhatsApp
+// Fungsi utama untuk koneksi WhatsApp
 async function connectToWhatsApp(): Promise<any> {
   console.log("🔄 Memulai koneksi WhatsApp...");
 
   const sessionData = await loadSession();
-  const { state, saveCreds } = await useMultiFileAuthState("./baileys_auth_info"); // Masih perlu untuk state auth
+  const { state, saveCreds } = await useMultiFileAuthState("whatsapp/session");
 
-  // 🔹 Jika sesi ada, gunakan sesi yang tersimpan
+  // Jika sesi ada, gunakan sesi yang tersimpan
   if (sessionData) {
     Object.assign(state.creds, sessionData);
   }
 
+  // Menerapkan opsi koneksi long polling agar tidak menggunakan WebSocket
   const sock = makeWASocket({
     auth: state,
     printQRInTerminal: false, // Tidak menampilkan QR di terminal secara otomatis
   });
 
-  // 🔹 Menyimpan sesi ke Firebase saat diperbarui
+  // Simpan sesi ke Firebase saat diperbarui
   sock.ev.on("creds.update", async () => {
     await saveCreds();
     await saveSession(state.creds);
@@ -76,20 +77,18 @@ async function connectToWhatsApp(): Promise<any> {
           try {
             await sock.logout();
             await sessionRef.remove(); // Hapus sesi di Firebase agar scan ulang
-            console.log("✅ Sesi berhasil dihapus dari Firebase.");
           } catch (err) {
             console.error("❌ Error saat logout:", err);
           }
         }
         shouldReconnect = lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut;
       }
-    
+
       console.log("⚠️ Koneksi terputus, mencoba kembali...", shouldReconnect);
       if (shouldReconnect && !isReconnecting) {
         isReconnecting = true;
         setTimeout(async () => {
           try {
-            console.log("🔄 Mencoba koneksi ulang...");
             await connectToWhatsAppWithRetry();
           } catch (e) {
             console.error("❌ Reconnect gagal:", e);
@@ -105,14 +104,14 @@ async function connectToWhatsApp(): Promise<any> {
   return sock;
 }
 
-// 🔹 Fungsi untuk mencoba koneksi ulang jika gagal
+// Fungsi untuk mencoba koneksi ulang jika gagal
 async function connectToWhatsAppWithRetry(retryCount = 5): Promise<any> {
   try {
     return await connectToWhatsApp();
   } catch (error) {
     if (retryCount > 0) {
       console.error(`❌ Gagal terhubung, mencoba kembali. Sisa percobaan: ${retryCount}`, error);
-      await new Promise((resolve) => setTimeout(resolve, 10000)); // Delay 10 detik sebelum reconnect
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       return connectToWhatsAppWithRetry(retryCount - 1);
     }
     throw new Error("❌ Gagal terhubung ke WhatsApp setelah beberapa percobaan.");

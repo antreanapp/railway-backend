@@ -48,12 +48,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const baileys_1 = __importStar(require("@whiskeysockets/baileys"));
 const boom_1 = require("@hapi/boom");
 const qrcode_terminal_1 = __importDefault(require("qrcode-terminal"));
-const firebase_1 = __importDefault(require("../config/firebase")); // 🔹 Menggunakan Firebase Admin SDK
+const firebase_1 = __importDefault(require("../config/firebase")); // Menggunakan Firebase Admin SDK
 const db = firebase_1.default.database();
-const sessionRef = db.ref("whatsapp/session"); // 🔹 Lokasi penyimpanan sesi di Firebase
-// 🔹 Flag global untuk mencegah reconnect berulang
+const sessionRef = db.ref("whatsapp/session"); // Lokasi penyimpanan sesi
+// Flag untuk mencegah reconnect berulang
 let isReconnecting = false;
-// 🔹 Fungsi untuk memuat sesi dari Firebase
+// Fungsi untuk memuat sesi dari Firebase
 function loadSession() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -73,7 +73,7 @@ function loadSession() {
         }
     });
 }
-// 🔹 Fungsi untuk menyimpan sesi ke Firebase
+// Fungsi untuk menyimpan sesi ke Firebase
 function saveSession(session) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -85,21 +85,22 @@ function saveSession(session) {
         }
     });
 }
-// 🔹 Fungsi utama untuk koneksi WhatsApp
+// Fungsi utama untuk koneksi WhatsApp
 function connectToWhatsApp() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("🔄 Memulai koneksi WhatsApp...");
         const sessionData = yield loadSession();
-        const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)("./baileys_auth_info"); // Masih perlu untuk state auth
-        // 🔹 Jika sesi ada, gunakan sesi yang tersimpan
+        const { state, saveCreds } = yield (0, baileys_1.useMultiFileAuthState)("whatsapp/session");
+        // Jika sesi ada, gunakan sesi yang tersimpan
         if (sessionData) {
             Object.assign(state.creds, sessionData);
         }
+        // Menerapkan opsi koneksi long polling agar tidak menggunakan WebSocket
         const sock = (0, baileys_1.default)({
             auth: state,
             printQRInTerminal: false, // Tidak menampilkan QR di terminal secara otomatis
         });
-        // 🔹 Menyimpan sesi ke Firebase saat diperbarui
+        // Simpan sesi ke Firebase saat diperbarui
         sock.ev.on("creds.update", () => __awaiter(this, void 0, void 0, function* () {
             yield saveCreds();
             yield saveSession(state.creds);
@@ -120,7 +121,6 @@ function connectToWhatsApp() {
                         try {
                             yield sock.logout();
                             yield sessionRef.remove(); // Hapus sesi di Firebase agar scan ulang
-                            console.log("✅ Sesi berhasil dihapus dari Firebase.");
                         }
                         catch (err) {
                             console.error("❌ Error saat logout:", err);
@@ -133,7 +133,6 @@ function connectToWhatsApp() {
                     isReconnecting = true;
                     setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                         try {
-                            console.log("🔄 Mencoba koneksi ulang...");
                             yield connectToWhatsAppWithRetry();
                         }
                         catch (e) {
@@ -150,7 +149,7 @@ function connectToWhatsApp() {
         return sock;
     });
 }
-// 🔹 Fungsi untuk mencoba koneksi ulang jika gagal
+// Fungsi untuk mencoba koneksi ulang jika gagal
 function connectToWhatsAppWithRetry() {
     return __awaiter(this, arguments, void 0, function* (retryCount = 5) {
         try {
@@ -159,7 +158,7 @@ function connectToWhatsAppWithRetry() {
         catch (error) {
             if (retryCount > 0) {
                 console.error(`❌ Gagal terhubung, mencoba kembali. Sisa percobaan: ${retryCount}`, error);
-                yield new Promise((resolve) => setTimeout(resolve, 10000)); // Delay 10 detik sebelum reconnect
+                yield new Promise((resolve) => setTimeout(resolve, 5000));
                 return connectToWhatsAppWithRetry(retryCount - 1);
             }
             throw new Error("❌ Gagal terhubung ke WhatsApp setelah beberapa percobaan.");
