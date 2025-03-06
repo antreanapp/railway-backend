@@ -117,7 +117,7 @@ function connectToWhatsApp() {
                 if ((lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) instanceof boom_1.Boom) {
                     const errorPayload = lastDisconnect.error.output.payload;
                     if ((_a = errorPayload === null || errorPayload === void 0 ? void 0 : errorPayload.message) === null || _a === void 0 ? void 0 : _a.toLowerCase().includes("conflict")) {
-                        console.log("🔴 Conflict error detected. Melakukan logout untuk membersihkan sesi.");
+                        console.log("🔴 Conflict error detected. Melakukan logout untuk membersihkan sesi dan mencoba menyambung kembali.");
                         try {
                             yield sock.logout();
                             yield sessionRef.remove(); // Hapus sesi di Firebase agar scan ulang
@@ -128,7 +128,7 @@ function connectToWhatsApp() {
                     }
                     shouldReconnect = lastDisconnect.error.output.statusCode !== baileys_1.DisconnectReason.loggedOut;
                 }
-                console.log("⚠️ Koneksi terputus, mencoba kembali...", shouldReconnect);
+                console.log("⚠️ Koneksi terputus, mencoba kembali...", shouldReconnect ? "true" : "false");
                 if (shouldReconnect && !isReconnecting) {
                     isReconnecting = true;
                     setTimeout(() => __awaiter(this, void 0, void 0, function* () {
@@ -139,7 +139,7 @@ function connectToWhatsApp() {
                             console.error("❌ Reconnect gagal:", e);
                         }
                         isReconnecting = false;
-                    }), 10000); // Delay 10 detik sebelum reconnect
+                    }), 60000); // Delay 10 detik sebelum reconnect
                 }
             }
             else if (connection === "open") {

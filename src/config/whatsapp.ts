@@ -73,7 +73,8 @@ async function connectToWhatsApp(): Promise<any> {
       if (lastDisconnect?.error instanceof Boom) {
         const errorPayload = lastDisconnect.error.output.payload;
         if (errorPayload?.message?.toLowerCase().includes("conflict")) {
-          console.log("🔴 Conflict error detected. Melakukan logout untuk membersihkan sesi.");
+      console.log("🔴 Conflict error detected. Melakukan logout untuk membersihkan sesi dan mencoba menyambung kembali.");
+
           try {
             await sock.logout();
             await sessionRef.remove(); // Hapus sesi di Firebase agar scan ulang
@@ -84,7 +85,8 @@ async function connectToWhatsApp(): Promise<any> {
         shouldReconnect = lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut;
       }
 
-      console.log("⚠️ Koneksi terputus, mencoba kembali...", shouldReconnect);
+      console.log("⚠️ Koneksi terputus, mencoba kembali...", shouldReconnect ? "true" : "false");
+
       if (shouldReconnect && !isReconnecting) {
         isReconnecting = true;
         setTimeout(async () => {
@@ -94,7 +96,7 @@ async function connectToWhatsApp(): Promise<any> {
             console.error("❌ Reconnect gagal:", e);
           }
           isReconnecting = false;
-        }, 10000); // Delay 10 detik sebelum reconnect
+        }, 60000); // Delay 10 detik sebelum reconnect
       }
     } else if (connection === "open") {
       console.log("✅ WhatsApp terhubung!");
