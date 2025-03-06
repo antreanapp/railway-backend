@@ -25,7 +25,8 @@ async function getWhatsAppConnection() {
 
 // 🔹 Fungsi untuk mengirim OTP dengan retry jika gagal
 async function sendOtpMessage(phoneNumber: string, otpCode: string, retryCount = 3): Promise<boolean> {
-  const sock = await getWhatsAppConnection();
+  // Pastikan kita mendapatkan koneksi WhatsApp yang aktif
+  sock = await getWhatsAppConnection();
   
   for (let i = 0; i < retryCount; i++) {
     try {
@@ -41,14 +42,21 @@ async function sendOtpMessage(phoneNumber: string, otpCode: string, retryCount =
         return true;
       }
 
-      // Jika error karena koneksi terputus atau conflict, reinitialize koneksi
-      if (error.message && (error.message.includes("connection closed") || error.message.includes("conflict"))) {
+      // Jika error karena koneksi tertutup atau conflict, reinitialize koneksi
+      if (
+        error.message &&
+        (error.message.toLowerCase().includes("connection closed") ||
+         error.message.toLowerCase().includes("conflict"))
+      ) {
         console.log("🔄 Reconnecting WhatsApp...");
-        let sock = await connectToWhatsApp();
+        // Reinitialize koneksi dan update global sock
+        sock = await connectToWhatsApp();
+        // Tambahkan delay lebih lama (misalnya 10 detik) untuk memastikan koneksi stabil
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+      } else {
+        // Jika error lainnya, tunggu 5 detik sebelum mencoba lagi
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       }
-
-      // Tunggu sebelum mencoba lagi
-      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
 

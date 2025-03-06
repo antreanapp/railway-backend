@@ -96,7 +96,7 @@ async function connectToWhatsApp(): Promise<any> {
             console.error("❌ Reconnect gagal:", e);
           }
           isReconnecting = false;
-        }, 60000); // Delay 10 detik sebelum reconnect
+        }, 60000); // Delay 60 detik sebelum reconnect
       }
     } else if (connection === "open") {
       console.log("✅ WhatsApp terhubung!");
@@ -113,7 +113,7 @@ async function connectToWhatsAppWithRetry(retryCount = 5): Promise<any> {
   } catch (error) {
     if (retryCount > 0) {
       console.error(`❌ Gagal terhubung, mencoba kembali. Sisa percobaan: ${retryCount}`, error);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 20000));
       return connectToWhatsAppWithRetry(retryCount - 1);
     }
     throw new Error("❌ Gagal terhubung ke WhatsApp setelah beberapa percobaan.");

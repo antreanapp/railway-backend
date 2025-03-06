@@ -37,7 +37,8 @@ function getWhatsAppConnection() {
 // 🔹 Fungsi untuk mengirim OTP dengan retry jika gagal
 function sendOtpMessage(phoneNumber_1, otpCode_1) {
     return __awaiter(this, arguments, void 0, function* (phoneNumber, otpCode, retryCount = 3) {
-        const sock = yield getWhatsAppConnection();
+        // Pastikan kita mendapatkan koneksi WhatsApp yang aktif
+        sock = yield getWhatsAppConnection();
         for (let i = 0; i < retryCount; i++) {
             try {
                 yield sock.sendMessage(`${phoneNumber}@s.whatsapp.net`, { text: `Kode OTP Anda: ${otpCode}` });
@@ -51,13 +52,20 @@ function sendOtpMessage(phoneNumber_1, otpCode_1) {
                     console.warn("⚠️ Timeout terjadi, tetapi pesan kemungkinan terkirim.");
                     return true;
                 }
-                // Jika error karena koneksi terputus atau conflict, reinitialize koneksi
-                if (error.message && (error.message.includes("connection closed") || error.message.includes("conflict"))) {
+                // Jika error karena koneksi tertutup atau conflict, reinitialize koneksi
+                if (error.message &&
+                    (error.message.toLowerCase().includes("connection closed") ||
+                        error.message.toLowerCase().includes("conflict"))) {
                     console.log("🔄 Reconnecting WhatsApp...");
-                    let sock = yield (0, whatsapp_1.default)();
+                    // Reinitialize koneksi dan update global sock
+                    sock = yield (0, whatsapp_1.default)();
+                    // Tambahkan delay lebih lama (misalnya 10 detik) untuk memastikan koneksi stabil
+                    yield new Promise((resolve) => setTimeout(resolve, 10000));
                 }
-                // Tunggu sebelum mencoba lagi
-                yield new Promise((resolve) => setTimeout(resolve, 5000));
+                else {
+                    // Jika error lainnya, tunggu 5 detik sebelum mencoba lagi
+                    yield new Promise((resolve) => setTimeout(resolve, 5000));
+                }
             }
         }
         console.error("❌ Gagal mengirim OTP setelah beberapa percobaan.");
